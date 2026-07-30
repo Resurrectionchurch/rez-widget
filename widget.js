@@ -1,4 +1,13 @@
 (function(){
+  // Inject the stylesheet ourselves — avoids CMS editors stripping <link> tags from body content
+  if(!document.getElementById('rc-widget-css')){
+    const cssLink = document.createElement('link');
+    cssLink.id = 'rc-widget-css';
+    cssLink.rel = 'stylesheet';
+    cssLink.href = 'https://resurrectionchurch.github.io/rez-widget/widget.css';
+    document.head.appendChild(cssLink);
+  }
+
   const CONFIG = {
     churchName: "Resurrection Church",
     scheduleShort: "Sundays: 10:00 AM (English) & 11:30 AM (Spanish)",
