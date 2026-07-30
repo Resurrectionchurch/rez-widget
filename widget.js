@@ -22,6 +22,20 @@
     eventsUrl: "https://resurrectionkaty.org/resources/events/",
     giveUrl: "https://resurrectionkaty.org/give",
     membershipUrl: "https://resurrectionkaty.org/request-membership/",
+    sermonsUrl: "https://resurrectionkaty.org/resources/sermons/",
+    galleryUrl: "https://resurrectionkaty.org/resources/gallery/",
+    podcastUrl: "https://resurrectionkaty.org/resources/audio-podcast/",
+    kidsUrl: "https://resurrectionkaty.org/ministries/rez-kids/",
+    studentsUrl: "https://resurrectionkaty.org/ministries/resurrection-students/",
+    seniorsUrl: "https://resurrectionkaty.org/ministries/resurrectionseniors/",
+    missionsUrl: "https://resurrectionkaty.org/ministries/missions/",
+    classesUrl: "https://resurrectionkaty.org/ministries/classes/",
+    lifeGroupUrl: "https://resurrectionkaty.org/life-group/",
+    storeUrl: "https://resurrectionkaty.qbstores.com/",
+    espanolUrl: "https://resurrectionkaty.org/espanol/",
+    whoWeAreUrl: "https://resurrectionkaty.org/about-us/who-we-are/",
+    whatWeBelieveUrl: "https://resurrectionkaty.org/about-us/what-we-believe/",
+    teamUrl: "https://resurrectionkaty.org/about-us/our-team/",
   };
 
   const root = document.getElementById('rc-chat-root');
@@ -54,7 +68,10 @@
       </div>
       <div class="rc-body" id="rcBody"></div>
       <div class="rc-footer">
-        <input type="text" id="rcInput" placeholder="Type your question..." />
+        <input type="text" id="rcInput" placeholder="Type or tap the mic to speak..." />
+        <button id="rcMic" aria-label="Speak" title="Speak your question">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" stroke="white" stroke-width="1.8"/><path d="M19 11a7 7 0 0 1-14 0M12 18v4" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
         <button id="rcSend" aria-label="Send">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 12L21 4L13 21L11 13L3 12Z" fill="white"/></svg>
         </button>
@@ -72,25 +89,42 @@
   });
   document.getElementById('rcClose').addEventListener('click', () => panel.classList.remove('rc-open'));
 
-  // ---------- Animated avatar: blinking is automatic (CSS); this drives the "talking" mouth ----------
+  // ---------- Animated avatar + voice output (free, browser-native Web Speech API) ----------
   const avatarEl = document.getElementById('rcAvatar');
   const mouthEl = document.getElementById('rcMouth');
   let talkTimer = null;
+  const synth = window.speechSynthesis;
 
   function speakAvatar(text){
+    const plainText = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
     if(talkTimer) clearInterval(talkTimer);
-    const duration = Math.min(3200, Math.max(500, text.replace(/<[^>]*>/g,'').length * 35));
-    avatarEl.classList.add('rc-talking');
-    let open = false;
-    talkTimer = setInterval(() => {
-      open = !open;
-      mouthEl.classList.toggle('rc-mouth-open', open);
-    }, 110);
-    setTimeout(() => {
-      clearInterval(talkTimer);
-      mouthEl.classList.remove('rc-mouth-open');
-      avatarEl.classList.remove('rc-talking');
-    }, duration);
+    let mouthDuration = Math.min(3200, Math.max(500, plainText.length * 35));
+
+    if(synth){
+      synth.cancel();
+      const utter = new SpeechSynthesisUtterance(plainText);
+      utter.rate = 1.0;
+      utter.pitch = 1.05;
+      avatarEl.classList.add('rc-talking');
+      let open = false;
+      talkTimer = setInterval(() => { open = !open; mouthEl.classList.toggle('rc-mouth-open', open); }, 110);
+      utter.onend = utter.onerror = () => {
+        clearInterval(talkTimer);
+        mouthEl.classList.remove('rc-mouth-open');
+        avatarEl.classList.remove('rc-talking');
+      };
+      synth.speak(utter);
+    } else {
+      avatarEl.classList.add('rc-talking');
+      let open = false;
+      talkTimer = setInterval(() => { open = !open; mouthEl.classList.toggle('rc-mouth-open', open); }, 110);
+      setTimeout(() => {
+        clearInterval(talkTimer);
+        mouthEl.classList.remove('rc-mouth-open');
+        avatarEl.classList.remove('rc-talking');
+      }, mouthDuration);
+    }
   }
 
   function addMsg(html, who){
@@ -195,18 +229,21 @@
       `Reason: ${reason}\nName: ${name}\nEmail: ${email || '(not provided)'}\nPhone: ${phone || '(not provided)'}\nNote: ${note || '(none)'}\n\nSent from the resurrectionkaty.org chat widget.`
     );
     window.open(`mailto:${CONFIG.email}?subject=${subject}&body=${bodyText}`, '_blank');
+  }
 
-    /* OPTIONAL UPGRADE — send silently to your inbox via Formspree (still free):
-       1. Create a free account at https://formspree.io using contact@resurrectionkaty.org
-       2. Create a form, copy its endpoint (looks like https://formspree.io/f/xxxxxxxx)
-       3. Comment out the window.open(...) line above and uncomment this:
+  function showSermons(){
+    addMsg(`Watch or listen to recent messages on our <a href="${CONFIG.sermonsUrl}" target="_blank" rel="noopener">Sermons page</a>, or catch the <a href="${CONFIG.podcastUrl}" target="_blank" rel="noopener">Audio Podcast</a>.`, 'bot');
+    addQuick([{ label: '⬅️ More options', action: mainMenu }]);
+  }
 
-    fetch('https://formspree.io/f/xxxxxxxx', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ name, email, phone, note, reason, source: 'resurrectionkaty.org chat widget' })
-    });
-    */
+  function showMinistries(){
+    addMsg(`We have ministries for every stage of life:<br>👶 <a href="${CONFIG.kidsUrl}" target="_blank" rel="noopener">Rez Kids</a><br>🧑 <a href="${CONFIG.studentsUrl}" target="_blank" rel="noopener">Students</a><br>🌿 <a href="${CONFIG.seniorsUrl}" target="_blank" rel="noopener">Seniors</a><br>🌍 <a href="${CONFIG.missionsUrl}" target="_blank" rel="noopener">Missions</a><br>📖 <a href="${CONFIG.classesUrl}" target="_blank" rel="noopener">Classes</a><br>🤝 <a href="${CONFIG.lifeGroupUrl}" target="_blank" rel="noopener">Life Groups</a>`, 'bot');
+    addQuick([{ label: '⬅️ More options', action: mainMenu }]);
+  }
+
+  function showAbout(){
+    addMsg(`Learn more about us:<br><a href="${CONFIG.whoWeAreUrl}" target="_blank" rel="noopener">Who We Are</a><br><a href="${CONFIG.whatWeBelieveUrl}" target="_blank" rel="noopener">What We Believe</a><br><a href="${CONFIG.teamUrl}" target="_blank" rel="noopener">Our Team</a>`, 'bot');
+    addQuick([{ label: '⬅️ More options', action: mainMenu }]);
   }
 
   function handleFreeText(text){
@@ -218,12 +255,45 @@
     if(t.includes('event')) return showEvents();
     if(t.includes('give') || t.includes('donat') || t.includes('tithe')) return showGive();
     if(t.includes('contact') || t.includes('pastor') || t.includes('call') || t.includes('meeting')) return showContact();
+    if(t.includes('sermon') || t.includes('podcast') || t.includes('message') || t.includes('watch')) return showSermons();
+    if(t.includes('kid') || t.includes('student') || t.includes('senior') || t.includes('mission') || t.includes('class') || t.includes('ministry') || t.includes('ministries') || t.includes('life group')) return showMinistries();
+    if(t.includes('believe') || t.includes('who we are') || t.includes('about') || t.includes('team') || t.includes('staff')) return showAbout();
+    if(t.includes('store') || t.includes('shop')) { addMsg(`Check out our online store: <a href="${CONFIG.storeUrl}" target="_blank" rel="noopener">resurrectionkaty.qbstores.com</a>`, 'bot'); return addQuick([{ label: '⬅️ More options', action: mainMenu }]); }
+    if(t.includes('español') || t.includes('espanol') || t.includes('spanish')) { addMsg(`Visita nuestra sección en español: <a href="${CONFIG.espanolUrl}" target="_blank" rel="noopener">resurrectionkaty.org/espanol</a>`, 'bot'); return addQuick([{ label: '⬅️ More options', action: mainMenu }]); }
     addMsg(`Thanks for your message. I don't have an automatic answer for that, but I can connect you with our team:`, 'bot');
     startLeadForm(`General question: "${text}"`);
   }
 
   document.getElementById('rcSend').addEventListener('click', sendUserText);
   document.getElementById('rcInput').addEventListener('keydown', e => { if(e.key === 'Enter') sendUserText(); });
+
+  // ---------- Voice input (free, browser-native Web Speech API) ----------
+  const micBtn = document.getElementById('rcMic');
+  const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(SpeechRecognitionAPI){
+    const recognition = new SpeechRecognitionAPI();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    let listening = false;
+
+    micBtn.addEventListener('click', () => {
+      if(listening) return;
+      listening = true;
+      micBtn.classList.add('rc-mic-active');
+      recognition.start();
+    });
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      document.getElementById('rcInput').value = transcript;
+      sendUserText();
+    };
+    recognition.onend = () => { listening = false; micBtn.classList.remove('rc-mic-active'); };
+    recognition.onerror = () => { listening = false; micBtn.classList.remove('rc-mic-active'); };
+  } else {
+    micBtn.style.display = 'none'; // Voice input not supported in this browser (e.g., Firefox desktop)
+  }
 
   function sendUserText(){
     const input = document.getElementById('rcInput');
