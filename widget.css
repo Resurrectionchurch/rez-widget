@@ -47,11 +47,34 @@
 }
 .rc-header-top{ display:flex; align-items:center; gap:12px; }
 .rc-avatar{
-  width:42px; height:42px; border-radius:50%; flex-shrink:0;
+  width:54px; height:54px; border-radius:50%; flex-shrink:0;
   background:radial-gradient(circle at 34% 30%, var(--rc-gold), #8a3245 70%);
   display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 0 3px rgba(255,255,255,0.15);
+  transition:transform .2s ease;
 }
-.rc-avatar svg{ width:22px; height:22px; }
+.rc-avatar.rc-talking{ animation:rc-bob 0.5s ease-in-out infinite; }
+@keyframes rc-bob{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-2px);} }
+
+.rc-face{ width:38px; height:38px; overflow:visible; }
+.rc-face-eye{
+  fill:var(--rc-wine-dark);
+  transform-box:fill-box; transform-origin:center;
+  animation:rc-blink 4.2s ease-in-out infinite;
+}
+.rc-face-eye.rc-eye-r{ animation-delay:0.02s; }
+@keyframes rc-blink{
+  0%, 90%, 100%{ transform:scaleY(1); }
+  93%{ transform:scaleY(0.08); }
+  96%{ transform:scaleY(1); }
+}
+.rc-face-mouth{
+  fill:var(--rc-wine-dark);
+  transform-box:fill-box; transform-origin:center;
+  transition:transform 0.09s ease-out;
+}
+.rc-face-mouth.rc-mouth-open{ transform:scaleY(2.6); }
+.rc-face-cheek{ fill:var(--rc-gold); opacity:0.35; }
 .rc-header h3{ font-family:var(--rc-font-display); font-weight:600; font-size:16.5px; margin:0; letter-spacing:.2px; }
 .rc-header p{ margin:2px 0 0; font-size:12px; opacity:.85; display:flex; align-items:center; gap:6px; }
 .rc-header p .rc-online{ width:7px; height:7px; border-radius:50%; background:#8FD98A; display:inline-block; }
