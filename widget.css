@@ -14,7 +14,7 @@
 #rc-chat-root, #rc-chat-root *{ box-sizing:border-box; }
 
 .rc-launcher{
-  position:fixed; bottom:24px; right:24px; z-index:999998;
+  position:fixed; bottom:24px; left:24px; z-index:999998;
   width:64px; height:64px; border-radius:50%;
   background:radial-gradient(circle at 32% 28%, var(--rc-gold), var(--rc-wine) 72%);
   border:none; cursor:pointer;
@@ -30,7 +30,7 @@
 }
 
 .rc-panel{
-  position:fixed; bottom:100px; right:24px; z-index:999999;
+  position:fixed; bottom:100px; left:24px; z-index:999999;
   width:370px; max-width:calc(100vw - 32px); height:540px; max-height:calc(100vh - 140px);
   background:var(--rc-ivory); border-radius:var(--rc-radius);
   box-shadow:0 20px 60px rgba(43,36,32,0.28);
@@ -126,5 +126,5 @@
 
 @media (max-width:480px){
   .rc-panel{ right:16px; left:16px; width:auto; bottom:88px; }
-  .rc-launcher{ right:16px; bottom:16px; }
+  .rc-launcher{ left:16px; bottom:16px; }
 }
