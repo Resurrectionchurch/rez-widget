@@ -28,8 +28,14 @@
       <div class="rc-header">
         <button class="rc-close" id="rcClose" aria-label="Close">&times;</button>
         <div class="rc-header-top">
-          <div class="rc-avatar">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L13.8 8.2L20 10L13.8 11.8L12 18L10.2 11.8L4 10L10.2 8.2L12 2Z" fill="#FBF6EC"/></svg>
+          <div class="rc-avatar" id="rcAvatar">
+            <svg class="rc-face" viewBox="0 0 100 100">
+              <ellipse class="rc-face-cheek" cx="22" cy="60" rx="9" ry="6"/>
+              <ellipse class="rc-face-cheek" cx="78" cy="60" rx="9" ry="6"/>
+              <ellipse class="rc-face-eye rc-eye-l" cx="35" cy="42" rx="5.5" ry="7.5"/>
+              <ellipse class="rc-face-eye rc-eye-r" cx="65" cy="42" rx="5.5" ry="7.5"/>
+              <ellipse class="rc-face-mouth" id="rcMouth" cx="50" cy="66" rx="11" ry="3"/>
+            </svg>
           </div>
           <div>
             <h3>${CONFIG.churchName}</h3>
@@ -57,12 +63,34 @@
   });
   document.getElementById('rcClose').addEventListener('click', () => panel.classList.remove('rc-open'));
 
+  // ---------- Animated avatar: blinking is automatic (CSS); this drives the "talking" mouth ----------
+  const avatarEl = document.getElementById('rcAvatar');
+  const mouthEl = document.getElementById('rcMouth');
+  let talkTimer = null;
+
+  function speakAvatar(text){
+    if(talkTimer) clearInterval(talkTimer);
+    const duration = Math.min(3200, Math.max(500, text.replace(/<[^>]*>/g,'').length * 35));
+    avatarEl.classList.add('rc-talking');
+    let open = false;
+    talkTimer = setInterval(() => {
+      open = !open;
+      mouthEl.classList.toggle('rc-mouth-open', open);
+    }, 110);
+    setTimeout(() => {
+      clearInterval(talkTimer);
+      mouthEl.classList.remove('rc-mouth-open');
+      avatarEl.classList.remove('rc-talking');
+    }, duration);
+  }
+
   function addMsg(html, who){
     const div = document.createElement('div');
     div.className = 'rc-msg ' + who;
     div.innerHTML = html;
     body.appendChild(div);
     body.scrollTop = body.scrollHeight;
+    if(who === 'bot') speakAvatar(html);
     return div;
   }
 
@@ -158,6 +186,18 @@
       `Reason: ${reason}\nName: ${name}\nEmail: ${email || '(not provided)'}\nPhone: ${phone || '(not provided)'}\nNote: ${note || '(none)'}\n\nSent from the resurrectionkaty.org chat widget.`
     );
     window.open(`mailto:${CONFIG.email}?subject=${subject}&body=${bodyText}`, '_blank');
+
+    /* OPTIONAL UPGRADE — send silently to your inbox via Formspree (still free):
+       1. Create a free account at https://formspree.io using contact@resurrectionkaty.org
+       2. Create a form, copy its endpoint (looks like https://formspree.io/f/xxxxxxxx)
+       3. Comment out the window.open(...) line above and uncomment this:
+
+    fetch('https://formspree.io/f/xxxxxxxx', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ name, email, phone, note, reason, source: 'resurrectionkaty.org chat widget' })
+    });
+    */
   }
 
   function handleFreeText(text){
