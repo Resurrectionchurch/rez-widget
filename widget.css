@@ -23,7 +23,7 @@
   transition:transform .25s ease, box-shadow .25s ease;
 }
 .rc-launcher:hover{ transform:translateY(-3px) scale(1.04); box-shadow:0 12px 30px rgba(63,20,32,0.45); }
-.rc-launcher svg{ width:30px; height:30px; }
+.rc-launcher-logo{ width:34px; height:auto; }
 .rc-launcher .rc-dot{
   position:absolute; top:2px; right:2px; width:14px; height:14px; border-radius:50%;
   background:var(--rc-sage); border:2px solid var(--rc-ivory);
