@@ -1,11 +1,18 @@
 (function(){
-  // Inject the stylesheet ourselves — avoids CMS editors stripping <link> tags from body content
+  // Inject the stylesheet + font ourselves — avoids CMS editors stripping <link> tags from body content
   if(!document.getElementById('rc-widget-css')){
     const cssLink = document.createElement('link');
     cssLink.id = 'rc-widget-css';
     cssLink.rel = 'stylesheet';
     cssLink.href = 'https://resurrectionchurch.github.io/rez-widget/widget.css';
     document.head.appendChild(cssLink);
+  }
+  if(!document.getElementById('rc-widget-font')){
+    const fontLink = document.createElement('link');
+    fontLink.id = 'rc-widget-font';
+    fontLink.rel = 'stylesheet';
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap';
+    document.head.appendChild(fontLink);
   }
 
   const CONFIG = {
@@ -36,6 +43,21 @@
     whoWeAreUrl: "https://resurrectionkaty.org/about-us/who-we-are/",
     whatWeBelieveUrl: "https://resurrectionkaty.org/about-us/what-we-believe/",
     teamUrl: "https://resurrectionkaty.org/about-us/our-team/",
+    seniorPastorName: "Rev. Howard Huhn",
+    seniorPastorEmail: "howard@resurrectionkaty.org",
+    spanishPastorName: "Daniel Hernandez",
+    spanishPastorEmail: "daniel@resurrectionkaty.org",
+    stewards: [
+      { name: "Trey Morgan", role: "Chairperson", url: "https://resurrectionkaty.org/about-us/our-team/member-detail/1710129" },
+      { name: "Phillip Reeves", role: "Board of Stewards", url: "https://resurrectionkaty.org/about-us/our-team/member-detail/1710459" },
+      { name: "Wayne Hooks", role: "Board of Stewards", url: "https://resurrectionkaty.org/about-us/our-team/member-detail/1710137" },
+      { name: "John Campbell", role: "Board of Stewards", url: "https://resurrectionkaty.org/about-us/our-team/member-detail/1710141" },
+      { name: "Pat Nichols", role: "Board of Stewards", url: "https://resurrectionkaty.org/about-us/our-team/member-detail/1710136" },
+      { name: "Heather Doughty", role: "Board of Stewards", url: "https://resurrectionkaty.org/about-us/our-team/member-detail/1710462" },
+      { name: "Kate Marinacci", role: "Board of Stewards", url: "https://resurrectionkaty.org/about-us/our-team/member-detail/1710140" },
+      { name: "Arnie England", role: "Board of Stewards", url: "https://resurrectionkaty.org/about-us/our-team/member-detail/1710139" },
+      { name: "Stephen Maddox", role: "Board of Stewards", url: "https://resurrectionkaty.org/about-us/our-team/member-detail/1710460" },
+    ],
   };
 
   const root = document.getElementById('rc-chat-root');
@@ -163,6 +185,7 @@
       { label: "👋 I'm new — plan a visit", action: () => startLeadForm('First-time visit') },
       { label: '🙏 Prayer request', action: () => startLeadForm('Prayer request') },
       { label: '📅 Talk to our team', action: showContact },
+      { label: '⛪ Meet our pastors', action: showStaff },
       { label: '📅 Upcoming events', action: showEvents },
       { label: '💛 Give', action: showGive },
     ]);
@@ -246,6 +269,20 @@
     addQuick([{ label: '⬅️ More options', action: mainMenu }]);
   }
 
+  function showStaff(){
+    addMsg(`Our pastoral team:<br><br><strong>${CONFIG.seniorPastorName}</strong> — Senior Pastor (English service, Sundays 10:00 AM)<br>✉️ <a href="mailto:${CONFIG.seniorPastorEmail}">${CONFIG.seniorPastorEmail}</a><br><br><strong>${CONFIG.spanishPastorName}</strong> — Pastor, Resurrección Español (Sundays 11:30 AM)<br>✉️ <a href="mailto:${CONFIG.spanishPastorEmail}">${CONFIG.spanishPastorEmail}</a>`, 'bot');
+    addQuick([
+      { label: '🧑‍🤝‍🧑 See Board of Stewards', action: showStewards },
+      { label: '⬅️ More options', action: mainMenu },
+    ]);
+  }
+
+  function showStewards(){
+    const list = CONFIG.stewards.map(s => `• <a href="${s.url}" target="_blank" rel="noopener">${s.name}</a> — ${s.role}`).join('<br>');
+    addMsg(`Our Board of Stewards:<br><br>${list}<br><br>Tap a name to see their full profile.`, 'bot');
+    addQuick([{ label: '⬅️ More options', action: mainMenu }]);
+  }
+
   function handleFreeText(text){
     const t = text.toLowerCase();
     if(t.includes('time') || t.includes('schedule') || t.includes('service') || t.includes('worship') || t.includes('hora')) return showSchedule();
@@ -254,10 +291,12 @@
     if(t.includes('new') || t.includes('visit') || t.includes('join') || t.includes('nuevo')) return startLeadForm('First-time visit');
     if(t.includes('event')) return showEvents();
     if(t.includes('give') || t.includes('donat') || t.includes('tithe')) return showGive();
-    if(t.includes('contact') || t.includes('pastor') || t.includes('call') || t.includes('meeting')) return showContact();
+    if(t.includes('pastor') || t.includes('staff') || t.includes('team') || t.includes('howard') || t.includes('daniel') || t.includes('leadership')) return showStaff();
+    if(t.includes('board') || t.includes('steward') || t.includes('trey') || t.includes('chairperson')) return showStewards();
+    if(t.includes('contact') || t.includes('call') || t.includes('meeting')) return showContact();
     if(t.includes('sermon') || t.includes('podcast') || t.includes('message') || t.includes('watch')) return showSermons();
     if(t.includes('kid') || t.includes('student') || t.includes('senior') || t.includes('mission') || t.includes('class') || t.includes('ministry') || t.includes('ministries') || t.includes('life group')) return showMinistries();
-    if(t.includes('believe') || t.includes('who we are') || t.includes('about') || t.includes('team') || t.includes('staff')) return showAbout();
+    if(t.includes('believe') || t.includes('who we are') || t.includes('about')) return showAbout();
     if(t.includes('store') || t.includes('shop')) { addMsg(`Check out our online store: <a href="${CONFIG.storeUrl}" target="_blank" rel="noopener">resurrectionkaty.qbstores.com</a>`, 'bot'); return addQuick([{ label: '⬅️ More options', action: mainMenu }]); }
     if(t.includes('español') || t.includes('espanol') || t.includes('spanish')) { addMsg(`Visita nuestra sección en español: <a href="${CONFIG.espanolUrl}" target="_blank" rel="noopener">resurrectionkaty.org/espanol</a>`, 'bot'); return addQuick([{ label: '⬅️ More options', action: mainMenu }]); }
     addMsg(`Thanks for your message. I don't have an automatic answer for that, but I can connect you with our team:`, 'bot');
