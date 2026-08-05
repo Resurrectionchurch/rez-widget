@@ -38,6 +38,9 @@
     missionsUrl: "https://resurrectionkaty.org/ministries/missions/",
     classesUrl: "https://resurrectionkaty.org/ministries/classes/",
     lifeGroupUrl: "https://resurrectionkaty.org/life-group/",
+    connectUrl: "https://resurrectionkaty.org/connect/",
+    googleCalendarUrl: "https://calendar.google.com/calendar/u/0?cid=Y185MWM2YThjYWRkYTMxOTAzODRhM2RlYjk0ZTFkNzc4MDQ3MjhmZjBkYTY0Y2YzM2FlZGMwMTc4NWQ3MDBkYzQ2QGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20",
+    prayerEmail: "prayers@resurrectionkaty.org",
     storeUrl: "https://resurrectionkaty.qbstores.com/",
     espanolUrl: "https://resurrectionkaty.org/espanol/",
     whoWeAreUrl: "https://resurrectionkaty.org/about-us/who-we-are/",
@@ -187,6 +190,7 @@
       { label: '📅 Talk to our team', action: showContact },
       { label: '⛪ Meet our pastors', action: showStaff },
       { label: '📅 Upcoming events', action: showEvents },
+      { label: '🗓️ Connect & calendar', action: showConnect },
       { label: '💛 Give', action: showGive },
     ]);
   }
@@ -272,7 +276,45 @@
   }
 
   function showMinistries(){
-    addMsg(`We have ministries for every stage of life:<br>👶 <a href="${CONFIG.kidsUrl}" target="_blank" rel="noopener">Rez Kids</a><br>🧑 <a href="${CONFIG.studentsUrl}" target="_blank" rel="noopener">Students</a><br>🌿 <a href="${CONFIG.seniorsUrl}" target="_blank" rel="noopener">Seniors</a><br>🌍 <a href="${CONFIG.missionsUrl}" target="_blank" rel="noopener">Missions</a><br>📖 <a href="${CONFIG.classesUrl}" target="_blank" rel="noopener">Classes</a><br>🤝 <a href="${CONFIG.lifeGroupUrl}" target="_blank" rel="noopener">Life Groups</a>`, 'bot');
+    addMsg(`We have ministries for every stage of life — tap one to learn more:`, 'bot');
+    addQuick([
+      { label: '👶 Rez Kids', action: showRezKids },
+      { label: '🧑 Students', action: showStudentsMinistry },
+      { label: '🌿 Seniors', action: showSeniorsMinistry },
+      { label: '🌍 Missions', action: showMissionsMinistry },
+      { label: '📖 Adult Classes', action: showClassesMinistry },
+      { label: '🤝 Life Groups', action: () => { addMsg(`Learn more about joining a Life Group: <a href="${CONFIG.lifeGroupUrl}" target="_blank" rel="noopener">resurrectionkaty.org/life-group</a>`, 'bot'); addQuick([{ label: '⬅️ More options', action: mainMenu }]); } },
+      { label: '⬅️ Main menu', action: mainMenu },
+    ]);
+  }
+
+  function showRezKids(){
+    addMsg(`<strong>Rez Kids</strong> — Sunday programs for kids (preschool–5th grade)<br><br>Kids join Children's Time during worship, then head to age-appropriate Sunday School with Bible stories, crafts, and music. Led by <strong>Bianca</strong>.<br><br>👉 <a href="${CONFIG.kidsUrl}" target="_blank" rel="noopener">Full details & volunteer sign-up</a>`, 'bot');
+    addQuick([{ label: '⬅️ Back to ministries', action: showMinistries }, { label: '🏠 Main menu', action: mainMenu }]);
+  }
+
+  function showStudentsMinistry(){
+    addMsg(`<strong>Resurrection Students</strong> — grades 6-12<br><br>• Junior High Bible Study: Sundays 5:00-6:30 PM<br>• High School Bible Study: Sundays 6:00-7:30 PM<br>Plus summer trips, Confirmation, and service opportunities.<br><br>Contact: <strong>Jason Cagle</strong>, Director of Student Ministries<br>👉 <a href="${CONFIG.studentsUrl}" target="_blank" rel="noopener">Full details</a>`, 'bot');
+    addQuick([{ label: '⬅️ Back to ministries', action: showMinistries }, { label: '🏠 Main menu', action: mainMenu }]);
+  }
+
+  function showSeniorsMinistry(){
+    addMsg(`<strong>Resurrection Seniors</strong><br><br>Monthly luncheons, day trips, Bible studies, and special celebrations for our senior members — fellowship, spiritual growth, and support.<br><br>👉 <a href="${CONFIG.seniorsUrl}" target="_blank" rel="noopener">Full calendar & details</a>`, 'bot');
+    addQuick([{ label: '⬅️ Back to ministries', action: showMinistries }, { label: '🏠 Main menu', action: mainMenu }]);
+  }
+
+  function showMissionsMinistry(){
+    addMsg(`<strong>Missions</strong><br><br>Local and global outreach, including supporting Katy Christian Ministries, and our Stephen Ministry care program that walks alongside people through difficult seasons.<br><br>👉 <a href="${CONFIG.missionsUrl}" target="_blank" rel="noopener">Full details & how to get involved</a>`, 'bot');
+    addQuick([{ label: '⬅️ Back to ministries', action: showMinistries }, { label: '🏠 Main menu', action: mainMenu }]);
+  }
+
+  function showClassesMinistry(){
+    addMsg(`<strong>Adult Bible Classes</strong><br><br>• <strong>Celebration Class</strong> — Wed 5-6 PM, led by Wayne Hooks<br>• <strong>New Beginnings</strong> — Sun 9:00 AM, at Katy High School<br>• <strong>The Chrysalis Class</strong> — Sundays after church<br>• <strong>Seekers Bible Study</strong> — Sun 9:00 AM<br>• Men's Breakfast (1st Saturday monthly) & Ladies Who Lunch (monthly)<br><br>👉 <a href="${CONFIG.classesUrl}" target="_blank" rel="noopener">Full details & contacts for each class</a>`, 'bot');
+    addQuick([{ label: '⬅️ Back to ministries', action: showMinistries }, { label: '🏠 Main menu', action: mainMenu }]);
+  }
+
+  function showConnect(){
+    addMsg(`Want to get connected? Check our <a href="${CONFIG.googleCalendarUrl}" target="_blank" rel="noopener">Google Calendar</a> for everything happening this week, or visit our <a href="${CONFIG.connectUrl}" target="_blank" rel="noopener">Connect page</a>.<br><br>Have a prayer need? Email <a href="mailto:${CONFIG.prayerEmail}">${CONFIG.prayerEmail}</a>.`, 'bot');
     addQuick([{ label: '⬅️ More options', action: mainMenu }]);
   }
 
@@ -307,7 +349,13 @@
     if(t.includes('board') || t.includes('steward') || t.includes('trey') || t.includes('chairperson')) return showStewards();
     if(t.includes('contact') || t.includes('call') || t.includes('meeting')) return showContact();
     if(t.includes('sermon') || t.includes('podcast') || t.includes('message') || t.includes('watch')) return showSermons();
-    if(t.includes('kid') || t.includes('student') || t.includes('senior') || t.includes('mission') || t.includes('class') || t.includes('ministry') || t.includes('ministries') || t.includes('life group')) return showMinistries();
+    if(t.includes('kid') || t.includes('rez kids') || t.includes('nursery')) return showRezKids();
+    if(t.includes('student') || t.includes('youth') || t.includes('jason cagle')) return showStudentsMinistry();
+    if(t.includes('senior')) return showSeniorsMinistry();
+    if(t.includes('mission') || t.includes('stephen ministry')) return showMissionsMinistry();
+    if(t.includes('class') || t.includes('bible study') || t.includes('chrysalis') || t.includes('seekers') || t.includes('new beginnings') || t.includes('celebration class')) return showClassesMinistry();
+    if(t.includes('ministry') || t.includes('ministries') || t.includes('life group')) return showMinistries();
+    if(t.includes('connect') || t.includes('calendar') || t.includes('what\'s happening') || t.includes('whats happening')) return showConnect();
     if(t.includes('believe') || t.includes('who we are') || t.includes('about')) return showAbout();
     if(t.includes('store') || t.includes('shop')) { addMsg(`Check out our online store: <a href="${CONFIG.storeUrl}" target="_blank" rel="noopener">resurrectionkaty.qbstores.com</a>`, 'bot'); return addQuick([{ label: '⬅️ More options', action: mainMenu }]); }
     if(t.includes('español') || t.includes('espanol') || t.includes('spanish')) { addMsg(`Visita nuestra sección en español: <a href="${CONFIG.espanolUrl}" target="_blank" rel="noopener">resurrectionkaty.org/espanol</a>`, 'bot'); return addQuick([{ label: '⬅️ More options', action: mainMenu }]); }
