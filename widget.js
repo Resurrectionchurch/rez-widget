@@ -41,6 +41,7 @@
     connectUrl: "https://resurrectionkaty.org/connect/",
     googleCalendarUrl: "https://calendar.google.com/calendar/u/0?cid=Y185MWM2YThjYWRkYTMxOTAzODRhM2RlYjk0ZTFkNzc4MDQ3MjhmZjBkYTY0Y2YzM2FlZGMwMTc4NWQ3MDBkYzQ2QGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20",
     prayerEmail: "prayers@resurrectionkaty.org",
+    eventsListUrl: "https://resurrectionkaty.org/resources/events/list/",
     storeUrl: "https://resurrectionkaty.qbstores.com/",
     espanolUrl: "https://resurrectionkaty.org/espanol/",
     whoWeAreUrl: "https://resurrectionkaty.org/about-us/who-we-are/",
@@ -190,6 +191,7 @@
       { label: '📅 Talk to our team', action: showContact },
       { label: '⛪ Meet our pastors', action: showStaff },
       { label: '📅 Upcoming events', action: showEvents },
+      { label: '🧳 Trips', action: showTrips },
       { label: '🗓️ Connect & calendar', action: showConnect },
       { label: '💛 Give', action: showGive },
     ]);
@@ -210,8 +212,14 @@
     addQuick([{ label: '⬅️ More options', action: mainMenu }]);
   }
 
-  function showEvents(){
-    addMsg(`See everything happening this month on our <a href="${CONFIG.eventsUrl}" target="_blank" rel="noopener">Events page</a>.`, 'bot');
+  async function showEvents(){
+    addMsg(`Let me check what's coming up...`, 'bot');
+    const events = await fetchLiveEvents();
+    if(!events || events.length === 0){
+      addMsg(`See everything happening this month on our <a href="${CONFIG.eventsListUrl}" target="_blank" rel="noopener">Events page</a>.`, 'bot');
+    } else {
+      addMsg(`Here's what's coming up:<br><br>${formatEventList(events)}<br><br><a href="${CONFIG.eventsListUrl}" target="_blank" rel="noopener">See the full list</a>`, 'bot');
+    }
     addQuick([{ label: '⬅️ More options', action: mainMenu }]);
   }
 
@@ -318,6 +326,94 @@
     addQuick([{ label: '⬅️ More options', action: mainMenu }]);
   }
 
+  // ---------- Live events reader: fetches & parses the real Events List page on demand ----------
+  let eventsCache = null;
+  let eventsCacheTime = 0;
+
+  async function fetchLiveEvents(){
+    if(eventsCache && (Date.now() - eventsCacheTime) < 10 * 60 * 1000) return eventsCache;
+    try {
+      const res = await fetch(CONFIG.eventsListUrl, { credentials: 'omit' });
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const links = Array.from(doc.querySelectorAll('a[href*="/event/"]'));
+      const seen = new Set();
+      const events = [];
+      links.forEach(a => {
+        const url = a.href;
+        const title = a.textContent.trim();
+        if(!title || seen.has(url)) return;
+        seen.add(url);
+
+        let container = a.closest('li, article, div') || a.parentElement;
+        let hops = 0;
+        while(container && !/Time:/i.test(container.innerText || '') && hops < 5){
+          container = container.parentElement;
+          hops++;
+        }
+
+        let timeText = '', locationText = '', locationUrl = '';
+        if(container){
+          const text = container.innerText || '';
+          const timeMatch = text.match(/Time:\s*([^\n]*)/i);
+          if(timeMatch) timeText = timeMatch[1].split(/Location:/i)[0].trim();
+          const locMatch = text.match(/Location:\s*([^\n]*)/i);
+          if(locMatch) locationText = locMatch[1].trim();
+          const locLink = container.querySelector('a[href*="maps.google"]');
+          if(locLink) locationUrl = locLink.href;
+        }
+        events.push({ title, url, timeText, locationText, locationUrl });
+      });
+      eventsCache = events;
+      eventsCacheTime = Date.now();
+      return events;
+    } catch(e){
+      return null;
+    }
+  }
+
+  function formatEventList(list){
+    return list.slice(0, 6).map(e => {
+      let line = `• <a href="${e.url}" target="_blank" rel="noopener">${e.title}</a>`;
+      if(e.timeText) line += `<br>&nbsp;&nbsp;🕐 ${e.timeText}`;
+      if(e.locationText) line += `<br>&nbsp;&nbsp;📍 ${e.locationUrl ? `<a href="${e.locationUrl}" target="_blank" rel="noopener">${e.locationText}</a>` : e.locationText}`;
+      return line;
+    }).join('<br><br>');
+  }
+
+  async function showTrips(){
+    addMsg(`Let me check our current trips...`, 'bot');
+    const events = await fetchLiveEvents();
+    if(!events){
+      addMsg(`I couldn't load live event data right now. Please check the <a href="${CONFIG.eventsListUrl}" target="_blank" rel="noopener">full Events list</a> directly.`, 'bot');
+      return addQuick([{ label: '⬅️ More options', action: mainMenu }]);
+    }
+    const trips = events.filter(e => /trip|viaje|mission/i.test(e.title));
+    if(trips.length === 0){
+      addMsg(`There aren't any trips listed right now. Check the <a href="${CONFIG.eventsListUrl}" target="_blank" rel="noopener">full Events list</a> for the latest updates, or contact us directly.`, 'bot');
+    } else {
+      addMsg(`Here are our current trips:<br><br>${formatEventList(trips)}<br><br>Questions? Contact us at <a href="tel:${CONFIG.phoneHref}">${CONFIG.phone}</a> or <a href="mailto:${CONFIG.email}">${CONFIG.email}</a>.`, 'bot');
+    }
+    addQuick([{ label: '⬅️ More options', action: mainMenu }]);
+  }
+
+  async function searchEventsByKeyword(keyword){
+    addMsg(`Checking our events for "${keyword}"...`, 'bot');
+    const events = await fetchLiveEvents();
+    if(!events){
+      addMsg(`I don't have an automatic answer for that, but I can connect you with our team:`, 'bot');
+      return startLeadForm(`General question: "${keyword}"`);
+    }
+    const kw = keyword.toLowerCase();
+    const matches = events.filter(e => kw.split(/\s+/).some(word => word.length > 3 && e.title.toLowerCase().includes(word)));
+    if(matches.length === 0){
+      addMsg(`I don't have an automatic answer for that, but I can connect you with our team:`, 'bot');
+      return startLeadForm(`General question: "${keyword}"`);
+    }
+    addMsg(`Here's what I found related to "${keyword}":<br><br>${formatEventList(matches)}<br><br>Questions? Contact us at <a href="tel:${CONFIG.phoneHref}">${CONFIG.phone}</a> or <a href="mailto:${CONFIG.email}">${CONFIG.email}</a>.`, 'bot');
+    addQuick([{ label: '⬅️ More options', action: mainMenu }]);
+  }
+
   function showAbout(){
     addMsg(`Learn more about us:<br><a href="${CONFIG.whoWeAreUrl}" target="_blank" rel="noopener">Who We Are</a><br><a href="${CONFIG.whatWeBelieveUrl}" target="_blank" rel="noopener">What We Believe</a><br><a href="${CONFIG.teamUrl}" target="_blank" rel="noopener">Our Team</a>`, 'bot');
     addQuick([{ label: '⬅️ More options', action: mainMenu }]);
@@ -344,6 +440,7 @@
     if(t.includes('pray') || t.includes('oraci')) return startLeadForm('Prayer request');
     if(t.includes('new') || t.includes('visit') || t.includes('join') || t.includes('nuevo')) return startLeadForm('First-time visit');
     if(t.includes('event')) return showEvents();
+    if(t.includes('trip') || t.includes('viaje') || t.includes('mission trip')) return showTrips();
     if(t.includes('give') || t.includes('donat') || t.includes('tithe')) return showGive();
     if(t.includes('pastor') || t.includes('staff') || t.includes('team') || t.includes('howard') || t.includes('daniel') || t.includes('leadership')) return showStaff();
     if(t.includes('board') || t.includes('steward') || t.includes('trey') || t.includes('chairperson')) return showStewards();
@@ -359,8 +456,7 @@
     if(t.includes('believe') || t.includes('who we are') || t.includes('about')) return showAbout();
     if(t.includes('store') || t.includes('shop')) { addMsg(`Check out our online store: <a href="${CONFIG.storeUrl}" target="_blank" rel="noopener">resurrectionkaty.qbstores.com</a>`, 'bot'); return addQuick([{ label: '⬅️ More options', action: mainMenu }]); }
     if(t.includes('español') || t.includes('espanol') || t.includes('spanish')) { addMsg(`Visita nuestra sección en español: <a href="${CONFIG.espanolUrl}" target="_blank" rel="noopener">resurrectionkaty.org/espanol</a>`, 'bot'); return addQuick([{ label: '⬅️ More options', action: mainMenu }]); }
-    addMsg(`Thanks for your message. I don't have an automatic answer for that, but I can connect you with our team:`, 'bot');
-    startLeadForm(`General question: "${text}"`);
+    return searchEventsByKeyword(text);
   }
 
   document.getElementById('rcSend').addEventListener('click', sendUserText);
